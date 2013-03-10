@@ -1,4 +1,4 @@
-from redisco.containers import SortedSet, Set
+from redisco.containers import SortedSet, Set, List
 
 
 class CappedSortedSet(SortedSet):
@@ -32,3 +32,29 @@ class PostActivitySet(Set):
     def __init__(self, prefix, activity, post_id, connection):
         key = '%s:activity:post:%s:%s' % (prefix, activity, post_id)
         return super(PostActivitySet, self).__init__(key, connection)
+
+
+class RateLimitedPoster(object):
+
+    def __init__(self, key_prefix, unpublish_queue='unpublished', published_queue='published', connection=None):
+        self.unpublished = List('%s:%s' % (key_prefix, unpublish_queue), connection)
+        self.published = List('%s:%s' % (key_prefix, published_queue), connection)
+
+    def add_items(self, items):
+        old_items = []
+        new_items = []
+        for item in items:
+            if item in self.published or item in self.unpublished:
+                old_items.append(item)
+            else:
+                self.unpublished.lpush(item)
+                new_items.append(item)
+
+        return (old_items, new_items)
+
+    def rpop(self):
+        next_item = self.unpublished.rpop()
+        if next_item:
+            self.published.lpush(next_item)
+
+        return next_item

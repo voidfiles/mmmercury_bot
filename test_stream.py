@@ -30,7 +30,7 @@ parser.add_argument('-n', '--stream-name', dest='stream_name',
 if __name__ == '__main__':
     logger = logging.getLogger()
     logger.addHandler(logging.StreamHandler(stream=sys.stdout))
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     args = parser.parse_args()
     connection = redis.StrictRedis(host='localhost', port=6379, db=2)
     test_stream_store = StreamStore(args.app_token, 'test_stream', STREAM_OBJECT,

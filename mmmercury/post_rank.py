@@ -97,8 +97,8 @@ def post_activity_score(post, key_prefix, connection):
 
 POST_CAP = 60000
 POST_STORE_PREFIX = 'mmmercury'
-DEFAULT_MAPS = (json.loads,)
-DEFAULT_FILTERS = (english_lang_filter, at_mention_filter)
+DEFAULT_MAPS = [json.loads, ]
+DEFAULT_FILTERS = [english_lang_filter, at_mention_filter, ]
 MAX_RANK = 100
 DEFAULT_SCORE_FUNC = post_activity_score
 DEFAULT_WEIGHT_FUNC = hn_weight
@@ -106,24 +106,34 @@ DEFAULT_WEIGHT_FUNC = hn_weight
 
 def rank_posts(key_prefix=POST_STORE_PREFIX, max_store=MAX_RANK, filters=DEFAULT_FILTERS, maps=DEFAULT_MAPS,
                score_func=DEFAULT_SCORE_FUNC, weight_func=DEFAULT_WEIGHT_FUNC, connection=None):
-    posts = PostStore(key_prefix=POST_STORE_PREFIX, cap=POST_CAP, connection=connection)
+    filtered_posts = PostStore(key_prefix=POST_STORE_PREFIX, cap=POST_CAP, connection=connection)
 
     for post_map in maps:
-        posts = itertools.imap(post_map, posts)
+        filtered_posts = itertools.imap(post_map, filtered_posts)
 
+    def score_filter(post):
+        post['score'] = score_func(post, key_prefix, connection)
+        return post
+
+    def weight_filter(post):
+        post['weight'] = weight_func(post)
+        return post
+
+    filters += [score_filter, weight_filter]
     for post_filter in filters:
-        posts = itertools.ifilter(post_filter, posts)
+        filtered_posts = itertools.ifilter(post_filter, filtered_posts)
 
     post_scores = Counter()
-    for post in posts:
-        score = score_func(post, key_prefix, connection)
-        weight = weight_func(post)
 
-        post_scores[post['id']] = score / weight
+    def rank_filter(post):
+        post_scores[post['id']] = post['score'] / post['weight']
+        return post
 
+    filtered_posts = filter(rank_filter, filtered_posts)
     posts = PostStore(key_prefix=POST_STORE_PREFIX, cap=POST_CAP, connection=connection)
 
     top_post_scores = post_scores.most_common(max_store)
+    print top_post_scores
     top_posts = []
     for post_id, score in top_post_scores:
         post = posts.eq(post_id)
