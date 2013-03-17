@@ -2,5 +2,5 @@ redis==2.7.2
 requests==1.1.0
 redisco==0.1.4
 iso8601==0.1.4
-langid
+# langid
 pytz==2012j
