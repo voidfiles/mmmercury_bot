@@ -2,5 +2,5 @@ redis==2.7.2
 requests==1.1.0
 redisco==0.1.4
 iso8601==0.1.4
--e git+git@github.com:saffsd/langid.py.git@5048323bd2f21265a06dcc0717ceb26bf05806f1#egg=langid-dev
+langid
 pytz==2012j
