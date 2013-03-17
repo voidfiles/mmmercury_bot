@@ -3,8 +3,6 @@
 import os
 import sys
 
-import mmmercury
-
 try:
     from setuptools import setup
 except ImportError:
@@ -29,7 +27,7 @@ requires = [
 
 setup(
     name='mmmercury',
-    version=mmmercury.__version__,
+    version='0.1.1',
     description='An App.net bot.',
     long_description=open('README.md').read(),
     author='Alex Kessinger',
